@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <odoo>
   <data noupdate="0">
 
@@ -7,38 +6,58 @@
     <template id="dashboard_template" name="Attendance Dashboard Page">
       <t t-call="web.layout">
         <div class="container mt-4">
+
+          <!-- Employee Info -->
           <h2>Hello, <t t-esc="data['employee']"/></h2>
           <p>Joining Date: <t t-esc="data['joining_date']"/></p>
 
-          <div class="row my-3">
-            <div class="col-3 bg-success text-white p-3 rounded">
+          <!-- Summary Boxes -->
+          <div class="row my-3 text-center">
+            <div class="col-3 bg-success text-white p-3 rounded shadow">
               Present: <t t-esc="data['present']"/>
             </div>
-            <div class="col-3 bg-warning text-dark p-3 rounded">
+            <div class="col-3 bg-warning text-dark p-3 rounded shadow">
               Late: <t t-esc="data['late']"/>
             </div>
-            <div class="col-3 bg-danger text-white p-3 rounded">
+            <div class="col-3 bg-danger text-white p-3 rounded shadow">
               Absent: <t t-esc="data['absent']"/>
+            </div>
+            <div class="col-3 bg-info text-white p-3 rounded shadow">
+              Offday: <t t-esc="data['offday']"/>
             </div>
           </div>
 
-          <table class="table table-bordered">
+          <!-- Total Extra Hours -->
+          <div class="row my-3">
+            <div class="col-12 bg-primary text-white p-3 rounded shadow text-center">
+              Total Extra Hours: <t t-esc="data['total_extra_hours']"/>
+            </div>
+          </div>
+
+          <!-- Attendance Table -->
+          <table class="table table-bordered table-striped">
             <thead class="thead-dark">
               <tr>
                 <th>Date</th>
                 <th>Check In</th>
                 <th>Check Out</th>
                 <th>Hours</th>
+                <th>Extra Hours</th>
                 <th>Status</th>
               </tr>
             </thead>
             <tbody>
               <t t-foreach="data['days']" t-as="day">
-                <tr>
+                <tr t-attf-class="
+                    #{'table-success' if day['status']=='Present' else ''}
+                    #{'table-warning' if day['status']=='Late' else ''}
+                    #{'table-danger' if day['status']=='Absent' else ''}
+                    #{'table-info' if day['status']=='Offday' else ''}">
                   <td><t t-esc="day['date']"/></td>
                   <td><t t-esc="day['check_in']"/></td>
                   <td><t t-esc="day['check_out']"/></td>
                   <td><t t-esc="day['hours']"/></td>
+                  <td><t t-esc="day['extra_hours']"/></td>
                   <td><t t-esc="day['status']"/></td>
                 </tr>
               </t>
