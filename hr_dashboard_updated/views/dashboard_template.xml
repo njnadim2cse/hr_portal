@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<odoo>
+  <data noupdate="0">
+
+    <!-- Attendance Dashboard Template -->
+    <template id="dashboard_template" name="Attendance Dashboard Page">
+      <t t-call="web.layout">
+        <div class="container mt-4">
+          <h2>Hello, <t t-esc="data['employee']"/></h2>
+          <p>Joining Date: <t t-esc="data['joining_date']"/></p>
+
+          <div class="row my-3">
+            <div class="col-3 bg-success text-white p-3 rounded">
+              Present: <t t-esc="data['present']"/>
+            </div>
+            <div class="col-3 bg-warning text-dark p-3 rounded">
+              Late: <t t-esc="data['late']"/>
+            </div>
+            <div class="col-3 bg-danger text-white p-3 rounded">
+              Absent: <t t-esc="data['absent']"/>
+            </div>
+          </div>
+
+          <table class="table table-bordered">
+            <thead class="thead-dark">
+              <tr>
+                <th>Date</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Hours</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <t t-foreach="data['days']" t-as="day">
+                <tr>
+                  <td><t t-esc="day['date']"/></td>
+                  <td><t t-esc="day['check_in']"/></td>
+                  <td><t t-esc="day['check_out']"/></td>
+                  <td><t t-esc="day['hours']"/></td>
+                  <td><t t-esc="day['status']"/></td>
+                </tr>
+              </t>
+            </tbody>
+          </table>
+        </div>
+      </t>
+    </template>
+
+  </data>
+</odoo>
