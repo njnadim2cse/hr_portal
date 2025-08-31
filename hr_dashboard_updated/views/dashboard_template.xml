@@ -1,71 +1,129 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-  <data noupdate="0">
+  <template id="dashboard_template" name="Attendance Dashboard">
+    <t t-call="website.layout">
+      <div class="container mt-5">
+        <h2 class="text-center mb-4">Attendance Dashboard</h2>
+          <h5 class="text-center text-muted mb-5">
+              <t t-esc="data['employee']"/> | Joined: <t t-esc="data['joining_date']"/>
+          </h5>
 
-    <!-- Attendance Dashboard Template -->
-    <template id="dashboard_template" name="Attendance Dashboard Page">
-      <t t-call="web.layout">
-        <div class="container mt-4">
-
-          <!-- Employee Info -->
-          <h2>Hello, <t t-esc="data['employee']"/></h2>
-          <p>Joining Date: <t t-esc="data['joining_date']"/></p>
-
-          <!-- Summary Boxes -->
-          <div class="row my-3 text-center">
-            <div class="col-3 bg-success text-white p-3 rounded shadow">
-              Present: <t t-esc="data['present']"/>
+          <!-- Summary Cards -->
+          <div class="row text-center mb-4">
+            <div class="col-md-3">
+              <div class="card shadow-sm border-success rounded-4">
+                <div class="card-body">
+                  <h6 class="text-success">Present</h6>
+                  <h3><t t-esc="data['present']"/></h3>
+                </div>
+              </div>
             </div>
-            <div class="col-3 bg-warning text-dark p-3 rounded shadow">
-              Late: <t t-esc="data['late']"/>
+            <div class="col-md-3">
+              <div class="card shadow-sm border-warning rounded-4">
+                <div class="card-body">
+                  <h6 class="text-warning">Late</h6>
+                  <h3><t t-esc="data['late']"/></h3>
+                </div>
+              </div>
             </div>
-            <div class="col-3 bg-danger text-white p-3 rounded shadow">
-              Absent: <t t-esc="data['absent']"/>
+            <div class="col-md-3">
+              <div class="card shadow-sm border-danger rounded-4">
+                <div class="card-body">
+                  <h6 class="text-danger">Absent</h6>
+                  <h3><t t-esc="data['absent']"/></h3>
+                </div>
+              </div>
             </div>
-            <div class="col-3 bg-info text-white p-3 rounded shadow">
-              Offday: <t t-esc="data['offday']"/>
+            <div class="col-md-3">
+              <div class="card shadow-sm border-info rounded-4">
+                <div class="card-body">
+                  <h6 class="text-info">Offday</h6>
+                  <h3><t t-esc="data['offday']"/></h3>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Total Extra Hours -->
-          <div class="row my-3">
-            <div class="col-12 bg-primary text-white p-3 rounded shadow text-center">
-              Total Extra Hours: <t t-esc="data['total_extra_hours']"/>
+          <!-- Extra Hours -->
+          <div class="alert alert-primary text-center rounded-4 shadow-sm">
+            <b>Total Extra Hours:</b> <t t-esc="data['total_extra_hours']"/> hrs
+          </div>
+
+          <!-- Chart Section -->
+          <div class="card shadow-sm mb-4 rounded-4">
+            <div class="card-body">
+              <h5 class="mb-3">Monthly Attendance Overview</h5>
+              <canvas id="attendanceChart" height="120"></canvas>
             </div>
           </div>
 
-          <!-- Attendance Table -->
-          <table class="table table-bordered table-striped">
-            <thead class="thead-dark">
-              <tr>
-                <th>Date</th>
-                <th>Check In</th>
-                <th>Check Out</th>
-                <th>Hours</th>
-                <th>Extra Hours</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <t t-foreach="data['days']" t-as="day">
-                <tr t-attf-class="
-                    #{'table-success' if day['status']=='Present' else ''}
-                    #{'table-warning' if day['status']=='Late' else ''}
-                    #{'table-danger' if day['status']=='Absent' else ''}
-                    #{'table-info' if day['status']=='Offday' else ''}">
-                  <td><t t-esc="day['date']"/></td>
-                  <td><t t-esc="day['check_in']"/></td>
-                  <td><t t-esc="day['check_out']"/></td>
-                  <td><t t-esc="day['hours']"/></td>
-                  <td><t t-esc="day['extra_hours']"/></td>
-                  <td><t t-esc="day['status']"/></td>
-                </tr>
-              </t>
-            </tbody>
-          </table>
-        </div>
-      </t>
-    </template>
+          <!-- Daily Records Table -->
+          <div class="card shadow-sm rounded-4">
+            <div class="card-body">
+              <h5 class="mb-3">Daily Records</h5>
+                <div class="table-responsive">
+                  <table class="table table-hover table-bordered align-middle">
+                    <thead class="table-dark">
+                      <tr>
+                        <th>Date</th>
+                        <th>Check In</th>
+                        <th>Check Out</th>
+                        <th>Hours</th>
+                        <th>Extra Hours</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <t t-foreach="data['days']" t-as="day">
+                        <tr>
+                          <td><t t-esc="day['date']"/></td>
+                          <td><t t-esc="day['check_in']"/></td>
+                          <td><t t-esc="day['check_out']"/></td>
+                          <td><t t-esc="day['hours']"/> h</td>
+                          <td><t t-esc="day['extra_hours']"/> h</td>
+                          <td>
+                            <span t-if="day['status']=='Present'" class="badge bg-success">Present</span>
+                            <span t-if="day['status']=='Late'" class="badge bg-warning text-dark">Late</span>
+                            <span t-if="day['status']=='Absent'" class="badge bg-danger">Absent</span>
+                            <span t-if="day['status']=='Offday'" class="badge bg-info">Offday</span>
+                          </td>
+                        </tr>
+                      </t>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
 
-  </data>
+          <!-- Chart.js -->
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+          <script>
+              document.addEventListener("DOMContentLoaded", function() {
+                var ctx = document.getElementById("attendanceChart").getContext("2d");
+                new Chart(ctx, {
+                  type: "doughnut",
+                    data: {
+                        labels: ["Present", "Late", "Absent", "Offday"],
+                        datasets: [{
+                            data: [
+                                <t t-esc="data['present']"/>,
+                                <t t-esc="data['late']"/>,
+                                <t t-esc="data['absent']"/>,
+                                <t t-esc="data['offday']"/>
+                            ],
+                            backgroundColor: ["#28a745", "#ffc107", "#dc3545", "#17a2b8"]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { position: "bottom" }
+                        }
+                    }
+                });
+              });
+          </script>
+    </t>    
+  </template>
 </odoo>
