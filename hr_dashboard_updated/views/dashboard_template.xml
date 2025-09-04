@@ -1,129 +1,235 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-  <template id="dashboard_template" name="Attendance Dashboard">
+  <template id="dashboard_template" name="HR Dashboard">
     <t t-call="website.layout">
-      <div class="container mt-5">
-        <h2 class="text-center mb-4">Attendance Dashboard</h2>
-          <h5 class="text-center text-muted mb-5">
-              <t t-esc="data['employee']"/> | Joined: <t t-esc="data['joining_date']"/>
-          </h5>
 
-          <!-- Summary Cards -->
-          <div class="row text-center mb-4">
-            <div class="col-md-3">
-              <div class="card shadow-sm border-success rounded-4">
-                <div class="card-body">
-                  <h6 class="text-success">Present</h6>
-                  <h3><t t-esc="data['present']"/></h3>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card shadow-sm border-warning rounded-4">
-                <div class="card-body">
-                  <h6 class="text-warning">Late</h6>
-                  <h3><t t-esc="data['late']"/></h3>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card shadow-sm border-danger rounded-4">
-                <div class="card-body">
-                  <h6 class="text-danger">Absent</h6>
-                  <h3><t t-esc="data['absent']"/></h3>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-3">
-              <div class="card shadow-sm border-info rounded-4">
-                <div class="card-body">
-                  <h6 class="text-info">Offday</h6>
-                  <h3><t t-esc="data['offday']"/></h3>
-                </div>
-              </div>
+      <style>
+        /* Sidebar */
+        .dashboard-sidebar {
+          position: fixed;
+          top: 70px; /* navbar height */
+          left: 0;
+          height: 100%;
+          width: 240px;
+          background: #f8f9fa;
+          border-right: 1px solid #dee2e6;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          z-index: 1000;
+          padding-top: 15px;
+        }
+        .dashboard-sidebar .list-group-item {
+          border: none;
+          border-radius: 0;
+          padding: 14px 18px;
+          font-weight: 500;
+          color: #495057;
+          transition: all 0.3s ease;
+        }
+        .dashboard-sidebar .list-group-item:hover {
+          background-color: #e9ecef;
+        }
+        .dashboard-sidebar .list-group-item.active {
+          background: linear-gradient(45deg, #0d6efd, #4dabf7);
+          color: #fff;
+          font-weight: 600;
+        }
+
+        /* Content */
+        .dashboard-content {
+          margin-left: 260px;
+          padding: 30px 20px;
+        }
+
+        /* Cards */
+        .summary-card {
+          border-radius: 20px;
+          color: #fff;
+          padding: 20px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+          transition: transform 0.2s ease;
+        }
+        .summary-card:hover {
+          transform: translateY(-5px);
+        }
+        .summary-icon {
+          font-size: 28px;
+          margin-bottom: 10px;
+        }
+
+        /* Leave badges */
+        .badge-leave {
+          padding: 6px 12px;
+          border-radius: 12px;
+          font-size: 0.9rem;
+        }
+
+        /* Tables */
+        .table th {
+          text-transform: uppercase;
+          font-size: 0.85rem;
+          letter-spacing: 0.5px;
+        }
+      </style>
+
+      <div class="container-fluid">
+        <div class="row">
+          
+          <!-- Sidebar -->
+          <div class="dashboard-sidebar">
+            <div class="list-group">
+              <a href="#attendance-section" class="list-group-item list-group-item-action active">
+                <i class="fa fa-calendar-check me-2"></i> Attendance
+              </a>
+              <a href="#leave-section" class="list-group-item list-group-item-action">
+                <i class="fa fa-plane me-2"></i> Leave Management
+              </a>
             </div>
           </div>
 
-          <!-- Extra Hours -->
-          <div class="alert alert-primary text-center rounded-4 shadow-sm">
-            <b>Total Extra Hours:</b> <t t-esc="data['total_extra_hours']"/> hrs
-          </div>
+          <!-- Main Content -->
+          <div class="dashboard-content col">
 
-          <!-- Chart Section -->
-          <div class="card shadow-sm mb-4 rounded-4">
-            <div class="card-body">
-              <h5 class="mb-3">Monthly Attendance Overview</h5>
-              <canvas id="attendanceChart" height="120"></canvas>
-            </div>
-          </div>
+            <!-- Attendance Section -->
+            <div id="attendance-section">
+              <h2 class="fw-bold mb-3 text-primary">Attendance Dashboard</h2>
+              <h6 class="text-muted mb-4">
+                <i class="fa fa-user-circle me-1"></i>
+                <t t-esc="data['employee']"/> | Joined: <t t-esc="data['joining_date']"/>
+              </h6>
 
-          <!-- Daily Records Table -->
-          <div class="card shadow-sm rounded-4">
-            <div class="card-body">
-              <h5 class="mb-3">Daily Records</h5>
-                <div class="table-responsive">
-                  <table class="table table-hover table-bordered align-middle">
-                    <thead class="table-dark">
-                      <tr>
-                        <th>Date</th>
-                        <th>Check In</th>
-                        <th>Check Out</th>
-                        <th>Hours</th>
-                        <th>Extra Hours</th>
-                        <th>Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <t t-foreach="data['days']" t-as="day">
+              <!-- Summary cards -->
+              <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                  <div class="summary-card" style="background: linear-gradient(45deg, #198754, #20c997);">
+                    <div class="summary-icon"><i class="fa fa-check-circle"></i></div>
+                    <h6>Present</h6>
+                    <h3><t t-esc="data['present']"/></h3>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="summary-card" style="background: linear-gradient(45deg, #ffc107, #fd7e14);">
+                    <div class="summary-icon"><i class="fa fa-clock"></i></div>
+                    <h6>Late</h6>
+                    <h3><t t-esc="data['late']"/></h3>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="summary-card" style="background: linear-gradient(45deg, #dc3545, #e55353);">
+                    <div class="summary-icon"><i class="fa fa-times-circle"></i></div>
+                    <h6>Absent</h6>
+                    <h3><t t-esc="data['absent']"/></h3>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="summary-card" style="background: linear-gradient(45deg, #0dcaf0, #0d6efd);">
+                    <div class="summary-icon"><i class="fa fa-sun"></i></div>
+                    <h6>Offday</h6>
+                    <h3><t t-esc="data['offday']"/></h3>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Extra Hours -->
+              <div class="alert alert-primary text-center rounded-pill shadow-sm">
+                <i class="fa fa-hourglass-half me-2"></i>
+                <b>Total Extra Hours:</b> <t t-esc="data['total_extra_hours']"/> hrs
+              </div>
+
+              <!-- Daily Records -->
+              <div class="card shadow-sm rounded-4 mt-4">
+                <div class="card-body">
+                  <h5 class="fw-bold mb-3">Daily Records</h5>
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                      <thead class="table-dark">
                         <tr>
-                          <td><t t-esc="day['date']"/></td>
-                          <td><t t-esc="day['check_in']"/></td>
-                          <td><t t-esc="day['check_out']"/></td>
-                          <td><t t-esc="day['hours']"/> h</td>
-                          <td><t t-esc="day['extra_hours']"/> h</td>
-                          <td>
-                            <span t-if="day['status']=='Present'" class="badge bg-success">Present</span>
-                            <span t-if="day['status']=='Late'" class="badge bg-warning text-dark">Late</span>
-                            <span t-if="day['status']=='Absent'" class="badge bg-danger">Absent</span>
-                            <span t-if="day['status']=='Offday'" class="badge bg-info">Offday</span>
-                          </td>
+                          <th>Date</th>
+                          <th>Check In</th>
+                          <th>Check Out</th>
+                          <th>Hours</th>
+                          <th>Extra Hours</th>
+                          <th>Status</th>
                         </tr>
-                      </t>
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        <t t-foreach="data['days']" t-as="day">
+                          <tr>
+                            <td><t t-esc="day['date']"/></td>
+                            <td><t t-esc="day['check_in']"/></td>
+                            <td><t t-esc="day['check_out']"/></td>
+                            <td><t t-esc="day['hours']"/> h</td>
+                            <td><t t-esc="day['extra_hours']"/> h</td>
+                            <td>
+                              <span t-if="day['status']=='Present'" class="badge bg-success">Present</span>
+                              <span t-if="day['status']=='Late'" class="badge bg-warning text-dark">Late</span>
+                              <span t-if="day['status']=='Absent'" class="badge bg-danger">Absent</span>
+                              <span t-if="day['status']=='Offday'" class="badge bg-info">Offday</span>
+                            </td>
+                          </tr>
+                        </t>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          <!-- Chart.js -->
-          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-          <script>
-              document.addEventListener("DOMContentLoaded", function() {
-                var ctx = document.getElementById("attendanceChart").getContext("2d");
-                new Chart(ctx, {
-                  type: "doughnut",
-                    data: {
-                        labels: ["Present", "Late", "Absent", "Offday"],
-                        datasets: [{
-                            data: [
-                                <t t-esc="data['present']"/>,
-                                <t t-esc="data['late']"/>,
-                                <t t-esc="data['absent']"/>,
-                                <t t-esc="data['offday']"/>
-                            ],
-                            backgroundColor: ["#28a745", "#ffc107", "#dc3545", "#17a2b8"]
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { position: "bottom" }
-                        }
-                    }
-                });
-              });
-          </script>
-    </t>    
+            <!-- Leave Section -->
+            <div id="leave-section" class="mt-5">
+              <h2 class="fw-bold mb-3 text-primary">Leave Management</h2>
+
+              <!-- Leave Summary -->
+              <div class="row g-4 mb-4">
+                <t t-foreach="data['leave_summary'].items()" t-as="leave">
+                  <div class="col-md-3">
+                    <div class="summary-card" style="background: linear-gradient(45deg, #6f42c1, #d63384);">
+                      <div class="summary-icon"><i class="fa fa-plane"></i></div>
+                      <h6><t t-esc="leave[0]"/></h6>
+                      <h3><t t-esc="leave[1]"/> days</h3>
+                    </div>
+                  </div>
+                </t>
+              </div>
+
+              <!-- Leave Table -->
+              <div class="card shadow-sm rounded-4">
+                <div class="card-body">
+                  <h5 class="fw-bold mb-3">Leave Details</h5>
+                  <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                      <thead class="table-dark">
+                        <tr>
+                          <th>Type</th>
+                          <th>From</th>
+                          <th>To</th>
+                          <th>Days</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <t t-foreach="data['leaves']" t-as="leave">
+                          <tr>
+                            <td><span class="badge bg-primary badge-leave"><t t-esc="leave['type']"/></span></td>
+                            <td><t t-esc="leave['from']"/></td>
+                            <td><t t-esc="leave['to']"/></td>
+                            <td><t t-esc="leave['days']"/></td>
+                          </tr>
+                        </t>
+                        <t t-if="not data['leaves']">
+                          <tr>
+                            <td colspan="4" class="text-center text-muted">No approved leaves this month</td>
+                          </tr>
+                        </t>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div> <!-- End content -->
+        </div>
+      </div>
+
+    </t>
   </template>
 </odoo>
