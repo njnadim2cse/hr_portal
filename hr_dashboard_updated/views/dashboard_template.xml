@@ -2,6 +2,7 @@
 <odoo>
   <template id="dashboard_template" name="HR Dashboard">
     <t t-call="website.layout">
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
       <style>
         /* Sidebar */
@@ -77,10 +78,10 @@
           <!-- Sidebar -->
           <div class="dashboard-sidebar">
             <div class="list-group">
-              <a href="#attendance-section" class="list-group-item list-group-item-action active">
+              <a href="/attendance/dashboard" class="list-group-item list-group-item-action active">
                 <i class="fa fa-calendar-check me-2"></i> Attendance
               </a>
-              <a href="#leave-section" class="list-group-item list-group-item-action">
+              <a href="/leave/dashboard" class="list-group-item list-group-item-action">
                 <i class="fa fa-plane me-2"></i> Leave Management
               </a>
             </div>
@@ -134,6 +135,42 @@
                 <i class="fa fa-hourglass-half me-2"></i>
                 <b>Total Extra Hours:</b> <t t-esc="data['total_extra_hours']"/> hrs
               </div>
+              
+              <!-- Attendance Chart -->
+              <div class="card shadow-sm rounded-4 mb-4">
+                <div class="card-body">
+                  <h5 class="fw-bold mb-3">Attendance Overview</h5>
+                  <canvas id="attendanceChart" height="120"></canvas>
+                </div>
+              </div>
+
+              <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                  const ctx = document.getElementById('attendanceChart').getContext('2d');
+                  new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                      labels: ['Present', 'Late', 'Absent', 'Offday'],
+                      datasets: [{
+                        data: [
+                          <t t-esc="data['present']"/>,
+                          <t t-esc="data['late']"/>,
+                          <t t-esc="data['absent']"/>,
+                          <t t-esc="data['offday']"/>
+                        ],
+                        backgroundColor: ['#198754', '#ffc107', '#dc3545', '#0dcaf0'],
+                        borderWidth: 1
+                      }]
+                    },
+                    options: {
+                      responsive: true,
+                      plugins: {
+                        legend: { position: 'bottom' }
+                      }
+                    }
+                  });
+                });
+              </script>
 
               <!-- Daily Records -->
               <div class="card shadow-sm rounded-4 mt-4">
@@ -173,62 +210,10 @@
                 </div>
               </div>
             </div>
-
-            <!-- Leave Section -->
-            <div id="leave-section" class="mt-5">
-              <h2 class="fw-bold mb-3 text-primary">Leave Management</h2>
-
-              <!-- Leave Summary -->
-              <div class="row g-4 mb-4">
-                <t t-foreach="data['leave_summary'].items()" t-as="leave">
-                  <div class="col-md-3">
-                    <div class="summary-card" style="background: linear-gradient(45deg, #6f42c1, #d63384);">
-                      <div class="summary-icon"><i class="fa fa-plane"></i></div>
-                      <h6><t t-esc="leave[0]"/></h6>
-                      <h3><t t-esc="leave[1]"/> days</h3>
-                    </div>
-                  </div>
-                </t>
-              </div>
-
-              <!-- Leave Table -->
-              <div class="card shadow-sm rounded-4">
-                <div class="card-body">
-                  <h5 class="fw-bold mb-3">Leave Details</h5>
-                  <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                      <thead class="table-dark">
-                        <tr>
-                          <th>Type</th>
-                          <th>From</th>
-                          <th>To</th>
-                          <th>Days</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <t t-foreach="data['leaves']" t-as="leave">
-                          <tr>
-                            <td><span class="badge bg-primary badge-leave"><t t-esc="leave['type']"/></span></td>
-                            <td><t t-esc="leave['from']"/></td>
-                            <td><t t-esc="leave['to']"/></td>
-                            <td><t t-esc="leave['days']"/></td>
-                          </tr>
-                        </t>
-                        <t t-if="not data['leaves']">
-                          <tr>
-                            <td colspan="4" class="text-center text-muted">No approved leaves this month</td>
-                          </tr>
-                        </t>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-
           </div> <!-- End content -->
         </div>
       </div>
+
 
     </t>
   </template>

@@ -11,3 +11,14 @@ class DashboardController(http.Controller):
 
         data = request.env['attendance.dashboard'].sudo().get_attendance_data(employee.id)
         return request.render('hr_dashboard_updated.dashboard_template', {'data': data})
+
+
+    @http.route('/leave/dashboard', type='http', auth='user', website=True)
+    def leave_dashboard(self, **kw):
+        employee = request.env['hr.employee'].search([('user_id', '=', request.env.user.id)], limit=1)
+        if not employee:
+            return "No employee linked to this user."
+
+        data = request.env['attendance.dashboard'].sudo().get_attendance_data(employee.id)
+        return request.render('hr_dashboard_updated.leave_dashboard_template', {'data': data})
+

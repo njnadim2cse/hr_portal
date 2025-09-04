@@ -5,6 +5,7 @@
     'depends': ['hr', 'hr_attendance', 'web'],
     'data': [
         'views/dashboard_template.xml',
+        'views/leave_dashboard_template.xml',
     ],
     'application': True,
 }
