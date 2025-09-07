@@ -2,8 +2,13 @@ from collections import defaultdict
 from datetime import datetime, timedelta, time
 import calendar
 from pytz import timezone, UTC
-from odoo import models, api
+from odoo import models, api, http
+from odoo.http import request
 
+
+# --------------------------
+# Attendance Dashboard Model
+# --------------------------
 class AttendanceDashboard(models.Model):
     _name = 'attendance.dashboard'
     _description = 'Attendance Dashboard'
@@ -18,27 +23,20 @@ class AttendanceDashboard(models.Model):
         next_month = start_date + timedelta(days=32)
         end_date = next_month.replace(day=1) - timedelta(days=1)
 
-        # Attendance records
         attendances = self.env['hr.attendance'].search([
             ('employee_id', '=', employee.id),
             ('check_in', '>=', datetime.combine(start_date, time.min).astimezone(UTC)),
             ('check_in', '<=', datetime.combine(end_date, time.max).astimezone(UTC)),
         ])
 
-        # Leave records (all states)
-        leaves = self.env['hr.leave'].search([
-            ('employee_id', '=', employee.id),
-            ('request_date_from', '<=', end_date),
-            ('request_date_to', '>=', start_date),
-        ])
-
-        # Group attendance by date
+        # Group by day
         daily_records = defaultdict(list)
         for att in attendances:
             if att.check_in:
                 check_in_local = att.check_in.astimezone(user_tz)
                 daily_records[check_in_local.date()].append(att)
 
+        # Prepare response
         data = {
             'employee': employee.name,
             'joining_date': employee.create_date.astimezone(user_tz).strftime("%d %b, %Y"),
@@ -48,22 +46,8 @@ class AttendanceDashboard(models.Model):
             'offday': 0,
             'total_extra_hours': 0,
             'days': [],
-            'leaves': [],
-            'leave_summary': defaultdict(float),
         }
 
-        # Add leave info with status
-        for leave in leaves:
-            data['leaves'].append({
-                'type': leave.holiday_status_id.name,
-                'from': leave.request_date_from.strftime("%d %b, %Y"),
-                'to': leave.request_date_to.strftime("%d %b, %Y"),
-                'days': leave.number_of_days,
-                'status': leave.state  # 'draft', 'confirm', 'to_approve', 'validate', 'refuse'
-            })
-            data['leave_summary'][leave.holiday_status_id.name] += leave.number_of_days
-
-        # Attendance rules
         late_threshold = time(9, 15)
         start_time = time(9, 0)
         end_time = time(18, 0)
@@ -128,4 +112,48 @@ class AttendanceDashboard(models.Model):
             day += timedelta(days=1)
 
         data['days'] = sorted(data['days'], key=lambda d: datetime.strptime(d['date'], "%d %b, %Y"), reverse=True)
+        return data
+
+
+# --------------------------
+# Leave Dashboard Model
+# --------------------------
+class LeaveDashboard(models.Model):
+    _name = "leave.dashboard"
+    _description = "Leave Management"
+
+    @api.model
+    def get_leave_data(self, employee_id, start_date=None, end_date=None):
+        employee = self.env['hr.employee'].browse(employee_id)
+        joining_date = employee.create_date.strftime("%d %b, %Y") if employee.create_date else "-"
+
+        if not start_date or not end_date:
+            today = datetime.now().date()
+            start_date = today.replace(day=1)
+            next_month = start_date + timedelta(days=32)
+            end_date = next_month.replace(day=1) - timedelta(days=1)
+
+        leaves = self.env['hr.leave'].search([
+            ('employee_id', '=', employee.id),
+            ('request_date_from', '<=', end_date),
+            ('request_date_to', '>=', start_date),
+        ])
+
+        data = {
+            'employee': employee.name,
+            'joining_date': joining_date,
+            'leaves': [],
+            'leave_summary': defaultdict(float),
+        }
+
+        for leave in leaves:
+            data['leaves'].append({
+                'type': leave.holiday_status_id.name,
+                'from': leave.request_date_from.strftime("%d %b, %Y"),
+                'to': leave.request_date_to.strftime("%d %b, %Y"),
+                'days': leave.number_of_days,
+                'status': leave.state,
+            })
+            data['leave_summary'][leave.holiday_status_id.name] += leave.number_of_days
+
         return data

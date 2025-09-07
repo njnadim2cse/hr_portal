@@ -2,7 +2,7 @@
 <odoo>
   <template id="leave_dashboard_template" name="Leave Management Dashboard">
     <t t-call="website.layout">
-
+      <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
       <style>
         /* Sidebar */
         .dashboard-sidebar {
@@ -76,12 +76,24 @@
 
           <!-- Sidebar -->
           <div class="dashboard-sidebar">
-            <div class="list-group">
-              <a href="/attendance/dashboard" class="list-group-item list-group-item-action">
-                <i class="fa fa-calendar-check me-2"></i> Attendance
+            <div class="list-group" id="sidebarMenu">
+              <a href="/dashboard" class="list-group-item list-group-item-action">
+                <i class="fa fa-tachometer-alt me-2"></i> Dashboard
               </a>
-              <a href="/leave/dashboard" class="list-group-item list-group-item-action active">
-                <i class="fa fa-plane me-2"></i> Leave Management
+              <a href="/dashboard/attendance" class="list-group-item list-group-item-action">
+                <i class="fa fa-calendar-check me-2"></i> Track Attendance
+              </a>
+              <a href="/dashboard/leave" class="list-group-item list-group-item-action active">
+                <i class="fa fa-plane-departure me-2"></i> Leave Management
+              </a>
+              <a href="/dashboard/loan_financial_aid" class="list-group-item list-group-item-action">
+                <i class="fa fa-hand-holding-usd me-2"></i> Loan &amp; Financial Aid
+              </a>
+              <a href="/dashboard/expenses" class="list-group-item list-group-item-action">
+                <i class="fa fa-wallet me-2"></i> Expenses
+              </a>
+              <a href="/dashboard/about_me" class="list-group-item list-group-item-action">
+                <i class="fa fa-user me-2"></i> About Me
               </a>
             </div>
           </div>
@@ -97,19 +109,85 @@
 
             <!-- Leave Summary Cards -->
             <div class="row g-4 mb-4">
-              <t t-foreach="data['leave_summary'].items()" t-as="leave">
+              <!-- Define colors once -->
+              <t t-set="colors" t-value="[
+                'linear-gradient(45deg, #0d6efd, #4dabf7)',
+                'linear-gradient(45deg, #198754, #20c997)',
+                'linear-gradient(45deg, #ffc107, #fd7e14)',
+                'linear-gradient(45deg, #dc3545, #ff6b6b)',
+                'linear-gradient(45deg, #6f42c1, #d63384)',
+                'linear-gradient(45deg, #0dcaf0, #17a2b8)',
+                'linear-gradient(45deg, #fd7e14, #ff922b)',
+                'linear-gradient(45deg, #6610f2, #6f42c1)',
+                'linear-gradient(45deg, #198754, #6f42c1)',
+                'linear-gradient(45deg, #e83e8c, #ff6f91)'
+              ]"/>
+
+              <!-- Pre-compute colors length -->
+              <t t-set="color_count" t-value="len(colors)"/>
+
+              <!-- Enumerate leave_summary with index -->
+              <t t-foreach="list(enumerate(data['leave_summary'].items()))" t-as="row">
+                <t t-set="i" t-value="row[0]"/>
+                <t t-set="leave" t-value="row[1]"/>
+                <t t-set="card_color" t-value="colors[i % color_count]"/>
+
                 <div class="col-md-3">
-                  <div class="summary-card" style="background: linear-gradient(45deg, #6f42c1, #d63384);">
-                    <div class="summary-icon"><i class="fa fa-plane"></i></div>
+                  <div class="summary-card" t-attf-style="background: {{ card_color }}">
+                    <div class="summary-icon"><i class="fa fa-plane-departure"></i></div>
                     <h6><t t-esc="leave[0]"/></h6>
                     <h3><t t-esc="leave[1]"/> days</h3>
                   </div>
                 </div>
               </t>
+
+              <!-- Fallback when no data -->
               <t t-if="not data['leave_summary']">
                 <div class="col-12 text-center text-muted">No leave data available</div>
               </t>
             </div>
+
+            <!-- Leave Chart -->
+            <div class="card shadow-sm rounded-4 mb-4">
+              <div class="card-body">
+                <h5 class="fw-bold mb-3">Leave Distribution</h5>
+                <canvas id="leaveChart" height="120"></canvas>
+              </div>
+            </div>
+
+            <script>
+              document.addEventListener("DOMContentLoaded", function () {
+                const ctx = document.getElementById('leaveChart').getContext('2d');
+                new Chart(ctx, {
+                  type: 'bar',
+                  data: {
+                    labels: [
+                      <t t-foreach="data['leave_summary'].keys()" t-as="type">
+                        "<t t-esc='type'/>",
+                      </t>
+                    ],
+                    datasets: [{
+                      label: 'Leave Days',
+                      data: [
+                        <t t-foreach="data['leave_summary'].values()" t-as="days">
+                          <t t-esc='days'/>,
+                        </t>
+                      ],
+                      backgroundColor: [
+                        '#0d6efd','#198754','#ffc107','#dc3545','#6f42c1',
+                        '#0dcaf0','#fd7e14','#6610f2','#20c997','#e83e8c'
+                      ]
+                    }]
+                  },
+                  options: {
+                    responsive: true,
+                    scales: {
+                      y: { beginAtZero: true }
+                    }
+                  }
+                });
+              });
+            </script>
 
             <!-- Leave Table -->
             <div class="card shadow-sm rounded-4">
@@ -160,6 +238,20 @@
           </div> <!-- End content -->
         </div>
       </div>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const menuItems = document.querySelectorAll("#sidebarMenu a");
+          const currentPath = window.location.pathname;
+
+          menuItems.forEach(item => {
+            item.classList.remove("active");
+            if (item.getAttribute("href") === currentPath) {
+              item.classList.add("active");
+            }
+          });
+        });
+      </script>
+
 
     </t>
   </template>

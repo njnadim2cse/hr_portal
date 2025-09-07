@@ -1,0 +1,167 @@
+<odoo>
+  <template id="loan_financial_aid" name="Loan &amp; Financial Aid Dashboard">
+    <t t-call="website.layout">
+      <style>
+        /* Sidebar */
+        .dashboard-sidebar {
+          position: fixed;
+          top: 70px; /* navbar height */
+          left: 0;
+          height: 100%;
+          width: 240px;
+          background: #f8f9fa;
+          border-right: 1px solid #dee2e6;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          z-index: 1000;
+          padding-top: 15px;
+        }
+        .dashboard-sidebar .list-group-item {
+          border: none;
+          border-radius: 0;
+          padding: 14px 18px;
+          font-weight: 500;
+          color: #495057;
+          transition: all 0.3s ease;
+        }
+        .dashboard-sidebar .list-group-item:hover {
+          background-color: #e9ecef;
+        }
+        .dashboard-sidebar .list-group-item.active {
+          background: linear-gradient(45deg, #0d6efd, #4dabf7);
+          color: #fff;
+          font-weight: 600;
+        }
+        /* Content */
+        .dashboard-content {
+          margin-left: 260px;
+          padding: 30px 20px;
+        }
+      </style>
+
+      <div class="container-fluid">
+        <div class="row">
+
+          <!-- Sidebar -->
+          <div class="dashboard-sidebar">
+            <div class="list-group" id="sidebarMenu">
+              <a href="/dashboard" class="list-group-item list-group-item-action">
+                <i class="fa fa-tachometer-alt me-2"></i> Dashboard
+              </a>
+              <a href="/dashboard/attendance" class="list-group-item list-group-item-action">
+                <i class="fa fa-calendar-check me-2"></i> Track Attendance
+              </a>
+              <a href="/dashboard/leave" class="list-group-item list-group-item-action">
+                <i class="fa fa-plane-departure me-2"></i> Leave Management
+              </a>
+              <a href="/dashboard/loan_financial_aid" class="list-group-item list-group-item-action active">
+                <i class="fa fa-hand-holding-usd me-2"></i> Loan &amp; Financial Aid
+              </a>
+              <a href="/dashboard/expenses" class="list-group-item list-group-item-action">
+                <i class="fa fa-wallet me-2"></i> Expenses
+              </a>
+              <a href="/dashboard/about_me" class="list-group-item list-group-item-action">
+                <i class="fa fa-user me-2"></i> About Me
+              </a>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="dashboard-content col">
+            <h2>Loan &amp; Financial Aid</h2>
+
+            <!-- Loan Request Form -->
+            <form class="loan-form" method="post" action="/dashboard/loan_financial_aid/submit">
+              <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+              <div class="mb-2">
+                <label>Employee Name</label>
+                <input type="text" class="form-control" t-att-value="employee.name" readonly="readonly"/>
+              </div>
+
+              <div class="mb-2">
+                <label>Loan Type</label>
+                <select class="form-control" name="loan_type" required="required">
+                  <option value="personal">Personal</option>
+                  <option value="education">Education</option>
+                  <option value="medical">Medical</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="mb-2">
+                <label>Amount</label>
+                <input type="number" class="form-control" name="amount" step="0.01" required="required"/>
+              </div>
+
+              <div class="mb-2">
+                <label>Guarantor Employee</label>
+                <select class="form-control" name="guarantor_id">
+                  <option value="">-- Select --</option>
+                  <t t-foreach="request.env['hr.employee'].sudo().search([])" t-as="emp">
+                    <option t-att-value="emp.id" t-esc="emp.name"></option>
+                  </t>
+                </select>
+              </div>
+
+              <div class="mb-2">
+                <label>Phone Number</label>
+                <input type="text" class="form-control" name="phone"/>
+              </div>
+
+              <button type="submit" class="btn btn-primary mt-2">Submit Request</button>
+            </form>
+
+            <!-- Loan Requests Table -->
+            <div class="loan-table">
+              <h3>Your Requests</h3>
+              <table class="table table-bordered table-striped">
+                <thead>
+                  <tr>
+                    <th>Loan Type</th>
+                    <th>Amount</th>
+                    <th>Guarantor</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Request Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <t t-foreach="requests" t-as="r">
+                    <tr>
+                      <td t-esc="r.loan_type"></td>
+                      <td t-esc="r.amount"></td>
+                      <td t-esc="r.guarantor_id.name if r.guarantor_id else '-'"></td>
+                      <td t-esc="r.phone"></td>
+                      <td t-esc="r.state"></td>
+                      <td t-esc="r.request_date.strftime('%d %b, %Y %H:%M')"></td>
+                    </tr>
+                  </t>
+                  <t t-if="not requests">
+                    <tr>
+                      <td colspan="6" class="text-center">No requests found.</td>
+                    </tr>
+                  </t>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const menuItems = document.querySelectorAll("#sidebarMenu a");
+          const currentPath = window.location.pathname;
+
+          menuItems.forEach(item => {
+            item.classList.remove("active");
+            if (item.getAttribute("href") === currentPath) {
+              item.classList.add("active");
+            }
+          });
+        });
+      </script>
+    </t>
+  </template>
+</odoo>

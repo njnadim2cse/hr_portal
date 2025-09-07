@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-  <template id="dashboard_template" name="HR Dashboard">
+  <template id="dashboard_attendance" name="HR Dashboard">
     <t t-call="website.layout">
       <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -77,12 +77,24 @@
           
           <!-- Sidebar -->
           <div class="dashboard-sidebar">
-            <div class="list-group">
-              <a href="/attendance/dashboard" class="list-group-item list-group-item-action active">
-                <i class="fa fa-calendar-check me-2"></i> Attendance
+            <div class="list-group" id="sidebarMenu">
+              <a href="/dashboard" class="list-group-item list-group-item-action">
+                <i class="fa fa-tachometer-alt me-2"></i> Dashboard
               </a>
-              <a href="/leave/dashboard" class="list-group-item list-group-item-action">
-                <i class="fa fa-plane me-2"></i> Leave Management
+              <a href="/dashboard/attendance" class="list-group-item list-group-item-action">
+                <i class="fa fa-calendar-check me-2"></i> Track Attendance
+              </a>
+              <a href="/dashboard/leave" class="list-group-item list-group-item-action active">
+                <i class="fa fa-plane-departure me-2"></i> Leave Management
+              </a>
+              <a href="/dashboard/loan_financial_aid" class="list-group-item list-group-item-action">
+                <i class="fa fa-hand-holding-usd me-2"></i> Loan &amp; Financial Aid
+              </a>
+              <a href="/dashboard/expenses" class="list-group-item list-group-item-action">
+                <i class="fa fa-wallet me-2"></i> Expenses
+              </a>
+              <a href="/dashboard/about_me" class="list-group-item list-group-item-action">
+                <i class="fa fa-user me-2"></i> About Me
               </a>
             </div>
           </div>
@@ -99,7 +111,7 @@
               </h6>
 
               <!-- Summary cards -->
-              <div class="row g-4 mb-4">
+              <div class="row g-3 mb-3">
                 <div class="col-md-3">
                   <div class="summary-card" style="background: linear-gradient(45deg, #198754, #20c997);">
                     <div class="summary-icon"><i class="fa fa-check-circle"></i></div>
@@ -133,14 +145,17 @@
               <!-- Extra Hours -->
               <div class="alert alert-primary text-center rounded-pill shadow-sm">
                 <i class="fa fa-hourglass-half me-2"></i>
-                <b>Total Extra Hours:</b> <t t-esc="data['total_extra_hours']"/> hrs
+                <b>Total Extra Hours:</b> 
+                <t t-esc="'{:.2f}'.format(data['total_extra_hours'])"/> hrs
               </div>
               
               <!-- Attendance Chart -->
               <div class="card shadow-sm rounded-4 mb-4">
                 <div class="card-body">
                   <h5 class="fw-bold mb-3">Attendance Overview</h5>
-                  <canvas id="attendanceChart" height="120"></canvas>
+                  <div style="max-width: 70%; margin: auto;"> <!-- reduce width here -->
+                    <canvas id="attendanceChart" height="120"></canvas>
+                  </div>
                 </div>
               </div>
 
@@ -213,8 +228,19 @@
           </div> <!-- End content -->
         </div>
       </div>
+      <script>
+        document.addEventListener("DOMContentLoaded", function () {
+          const menuItems = document.querySelectorAll("#sidebarMenu a");
+          const currentPath = window.location.pathname;
 
-
+          menuItems.forEach(item => {
+            item.classList.remove("active");
+            if (item.getAttribute("href") === currentPath) {
+              item.classList.add("active");
+            }
+          });
+        });
+      </script>
     </t>
   </template>
 </odoo>
